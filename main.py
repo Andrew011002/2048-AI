@@ -10,8 +10,8 @@ import sys
 import os
 
 path = os.path.abspath(os.path.dirname(__file__))
-timestep = 4049
-model = sb3.PPO.load(f"models/Agent-Dync-{timestep}")
+timestep = 2940
+model = sb3.PPO.load(f"Agents/Agent-{timestep}")
 
 class Game(tk.Frame):
 

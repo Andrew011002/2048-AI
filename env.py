@@ -297,7 +297,7 @@ class Env2048(gym.Env):
         self.scale = 100
 
         # dynamic data
-        self.frequency = 10
+        self.frequency = 20
 
         # instantiate grid
         self.grid = np.zeros((self.size, self.size)).astype(int)

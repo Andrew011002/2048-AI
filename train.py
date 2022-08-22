@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # TRAINING
     model = sb3.PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/") # Proximal Policy Optimization Algorithm
-    train(model, log_name="Agent-Dync", timesteps=10000, iters=5000) # 50 million runs in the game
+    train(model, log_name="Agent-Dync-20", timesteps=10000, iters=5000) # 50 million runs in the game
     
     # RETRAINING
     # ppo = sb3.PPO.load("models/ppo_4x4-100x10^4")
