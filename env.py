@@ -1,4 +1,3 @@
-import stable_baselines3 as sb3
 import gym
 import numpy as np
 from stable_baselines3.common.env_checker import check_env
@@ -217,7 +216,7 @@ class Env2048(gym.Env):
         self.score += score
         self.moves += moves
         self.grid_sum = np.sum(self.grid)
-        self.discount = np.sqrt(np.log(self.states) + 1)
+        self.discount = 1 / (np.sqrt(np.log(self.states) + 1) * self.scale)
 
         # base reward for combined tiles and sum towards 2048
         self.reward = self.score - self.prevScore
@@ -256,8 +255,8 @@ class Env2048(gym.Env):
                 # worst move when could've made an alternate move
                 elif np.sum(np.delete(self.valid_moves, self.worst_move)) != -3:
                     self.reward -= 100
-
-        self.reward /= self.discount * self.scale # normalizing reward
+        
+        self.reward *= self.discount # normalizing reward
 
         # checking if the game is over
         if game_over(self.grid, size=self.size):
@@ -268,18 +267,12 @@ class Env2048(gym.Env):
         info = dict(states=self.states, score=self.score, points=self.score-self.prevScore, 
                     moved="yes" if (self.moves - self.prevMoves) else "no", best_move=MAPPINGS.get(self.scoring_moves[0], "NA"), 
                     next_best=MAPPINGS.get(self.scoring_moves[1], "NA"), total=self.grid_sum, target=self.text, 
-                    discount= 1 / self.discount)
-
-        # dyanmic changes (updates only after a certain amount of states)
-        if self.states % self.frequency == 0:
-            self.goal_row, self.goal_col, self.text = find_goal_space(self.grid, size=self.size) # find goal row
-            self.slide_x, self.slide_y = slide_to(self.goal_row, self.goal_col, size=self.size) # find best sliding moves
+                    discount=self.discount)
 
         # update previous info, get observation (updates for next state)
         self.prevScore = self.score
         self.prevMoves = self.moves
         self.valid_moves = find_valid_moves(self.grid, self.size) # set valid moves for next run
-        
         self.scoring_moves = score_maximizer(self.slide_x, self.slide_y, self.grid, size=self.size) # find scoring moves for next run (dynamic change)
         self.observation = np.array([self.slide_x, self.slide_y] + self.scoring_moves + self.valid_moves).astype(np.float32) # get obs
         
@@ -295,9 +288,6 @@ class Env2048(gym.Env):
         self.moves = 0
         self.prevMoves = 0
         self.scale = 100
-
-        # dynamic data
-        self.frequency = 20
 
         # instantiate grid
         self.grid = np.zeros((self.size, self.size)).astype(int)

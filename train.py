@@ -19,37 +19,52 @@ def retrain(env, log_name, timesteps, iters):
         model.save(f"models/{name}-{int(steps) + i}")
 
 # simulates how the model peforms after desired episode length
-def simulate(model, env, episodes=3):
-
+def simulate(model, env, tile, episodes=3, verbose=False):
+    total = 0
     # create new sim for n episodes
     for ep in range(episodes):
         done = False
         obs = env.reset() # init
-        env.render()
-        print(f"Trial: {ep + 1}")
+
+        # show info & env
+        if verbose:
+            print(f"Trial: {ep + 1}")
+            env.render()
 
         # run sim until the agent is done (fails or wins)
         while not done:
-            print(f'Oberservation: {obs}')
+
+            # predict based on env, then update env
             action, state = model.predict(obs)
             obs, reward, done, info = env.step(action)
-            print(f"Action: {action}\nReward: {reward}") # info
-            env.render() # show action made
-            print(f'Info: {info}')
+            # tile number reached during episode
+            if info["points"] >= tile:
+                total += 1
+
+            # show info & env
+            if verbose:
+                env.render() # show action made
+                print(f'Oberservation: {obs}')
+                print(f"Action: {action}\nReward: {reward}") # info
+                print(f'Info: {info}')
+
+    return total
+    
         
 if __name__ == "__main__":
     # Enviornment
     env = Env2048(size=4) # 4x4 2048 env
 
     # TRAINING
-    model = sb3.PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/") # Proximal Policy Optimization Algorithm
-    train(model, log_name="Agent-Dync-20", timesteps=10000, iters=5000) # 50 million runs in the game
+    # model = sb3.PPO("MlpPolicy", env, verbose=1, tensorboard_log="logs/") # Proximal Policy Optimization Algorithm
+    # train(model, log_name="Agent", timesteps=10000, iters=5000) # 50 million runs in the game
     
     # RETRAINING
     # ppo = sb3.PPO.load("models/ppo_4x4-100x10^4")
     # retrain(env, "ppo-6824", timesteps=10000, iters=5000)
 
     # SIMULATING
-    # tag = 4049
-    # model = sb3.PPO.load(f"models/Agent-{tag}")
-    # simulate(model, env, episodes=1)
+    tag = 2940
+    model = sb3.PPO.load(f"Agents/Agent-{tag}")
+    total = simulate(model, env, points=1024, episodes=1000)
+    print(total)
